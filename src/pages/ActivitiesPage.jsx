@@ -1,15 +1,27 @@
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import {
+    useEffect,
+    useState
+} from "react";
+
+import {
+    useDispatch,
+    useSelector
+} from "react-redux";
 
 import Navbar from "../components/layout/Navbar";
+import ActivityForm from "../components/activities/ActivityForm";
+import EditActivityForm from "../components/activities/EditActivityForm";
+
 import api from "../api/api";
 
 import { cargarActividades } from "../features/activities.slice";
 import { cargarCategorias } from "../features/categories.slice";
-import ActivityForm from "../components/activities/ActivityForm";
 
 const ActivitiesPage = () => {
     const dispatch = useDispatch();
+
+    const [actividadEditando, setActividadEditando] =
+        useState(null);
 
     const token = useSelector(
         state => state.auth.token
@@ -123,29 +135,53 @@ const ActivitiesPage = () => {
             ) : (
                 actividades.map(actividad => (
                     <div key={actividad._id}>
-                        <h3>
-                            {actividad.titulo}
-                        </h3>
 
-                        <p>
-                            {actividad.descripcion}
-                        </p>
+                        {actividadEditando === actividad._id ? (
+                            <EditActivityForm
+                                actividad={actividad}
+                                cancelarEdicion={() =>
+                                    setActividadEditando(null)
+                                }
+                            />
+                        ) : (
+                            <>
+                                <h3>
+                                    {actividad.titulo}
+                                </h3>
 
-                        <p>
-                            Duración:{" "}
-                            {actividad.duracionMinutos} minutos
-                        </p>
+                                <p>
+                                    {actividad.descripcion}
+                                </p>
 
-                        <button
-                            type="button"
-                            onClick={() =>
-                                eliminarActividad(
-                                    actividad._id
-                                )
-                            }
-                        >
-                            Eliminar
-                        </button>
+                                <p>
+                                    Duración:{" "}
+                                    {actividad.duracionMinutos} minutos
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setActividadEditando(
+                                            actividad._id
+                                        )
+                                    }
+                                >
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        eliminarActividad(
+                                            actividad._id
+                                        )
+                                    }
+                                >
+                                    Eliminar
+                                </button>
+                            </>
+                        )}
+
                     </div>
                 ))
             )}
