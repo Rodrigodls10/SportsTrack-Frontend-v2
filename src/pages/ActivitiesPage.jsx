@@ -11,6 +11,7 @@ import {
 import Navbar from "../components/layout/Navbar";
 import ActivityForm from "../components/activities/ActivityForm";
 import EditActivityForm from "../components/activities/EditActivityForm";
+import ActivityFilters from "../components/activities/ActivityFilters";
 
 import api from "../api/api";
 
@@ -77,6 +78,34 @@ const ActivitiesPage = () => {
 
     }, [dispatch, token]);
 
+    const filtrarActividades = async (filtros) => {
+        try {
+            const respuesta = await api.get(
+                "/activities",
+                {
+                    params: filtros,
+
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            dispatch(
+                cargarActividades(
+                    respuesta.data
+                )
+            );
+
+        } catch (error) {
+            console.log(
+                "Error al filtrar:",
+                error.response?.data ||
+                error.message
+            );
+        }
+    };
+
     const eliminarActividad = async (id) => {
         const confirmar = window.confirm(
             "¿Seguro que querés eliminar esta actividad?"
@@ -128,9 +157,13 @@ const ActivitiesPage = () => {
 
             <ActivityForm />
 
+            <ActivityFilters
+                onFiltrar={filtrarActividades}
+            />
+
             {actividades.length === 0 ? (
                 <p>
-                    No tenés actividades registradas.
+                    No se encontraron actividades.
                 </p>
             ) : (
                 actividades.map(actividad => (
