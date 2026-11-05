@@ -65,6 +65,49 @@ const ActivitiesPage = () => {
 
     }, [dispatch, token]);
 
+    const eliminarActividad = async (id) => {
+        const confirmar = window.confirm(
+            "¿Seguro que querés eliminar esta actividad?"
+        );
+
+        if (!confirmar) {
+            return;
+        }
+
+        try {
+            await api.delete(
+                `/activities/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const respuesta = await api.get(
+                "/activities",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            dispatch(
+                cargarActividades(
+                    respuesta.data
+                )
+            );
+
+        } catch (error) {
+            console.log(
+                "Error al eliminar:",
+                error.response?.data ||
+                error.message
+            );
+        }
+    };
+
     return (
         <div>
             <Navbar />
@@ -92,6 +135,17 @@ const ActivitiesPage = () => {
                             Duración:{" "}
                             {actividad.duracionMinutos} minutos
                         </p>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                eliminarActividad(
+                                    actividad._id
+                                )
+                            }
+                        >
+                            Eliminar
+                        </button>
                     </div>
                 ))
             )}
