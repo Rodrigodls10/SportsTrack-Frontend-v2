@@ -1,7 +1,16 @@
-import { useDispatch, useSelector } from "react-redux";
+import {
+    useDispatch,
+    useSelector
+} from "react-redux";
+
 import { useNavigate } from "react-router-dom";
 
+import UpgradePlanButton from "../components/dashboard/UpgradePlanButton";
+import ActivityChart from "../components/dashboard/ActivityChart";
+
 import Navbar from "../components/layout/Navbar";
+import PlanUsageCard from "../components/dashboard/PlanUsageCard";
+
 import { logout } from "../features/auth.slice";
 
 const DashboardPage = () => {
@@ -25,7 +34,9 @@ const DashboardPage = () => {
         <div>
             <Navbar />
 
-            <h1>SportsTrack</h1>
+            <h1>
+                SportsTrack
+            </h1>
 
             <h2>
                 Bienvenido, {usuario?.username}
@@ -43,7 +54,16 @@ const DashboardPage = () => {
                 Plan: {usuario?.plan}
             </p>
 
-            <button onClick={cerrarSesion}>
+            <PlanUsageCard />
+
+            <UpgradePlanButton />
+
+            <ActivityChart />
+
+            <button
+                type="button"
+                onClick={cerrarSesion}
+            >
                 Cerrar sesión
             </button>
         </div>
