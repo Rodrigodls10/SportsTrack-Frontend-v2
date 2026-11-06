@@ -12,6 +12,7 @@ import Navbar from "../components/layout/Navbar";
 import ActivityForm from "../components/activities/ActivityForm";
 import EditActivityForm from "../components/activities/EditActivityForm";
 import ActivityFilters from "../components/activities/ActivityFilters";
+import ActivityImageUpload from "../components/activities/ActivityImageUpload";
 
 import api from "../api/api";
 
@@ -268,6 +269,38 @@ const ActivitiesPage = () => {
                                         "es-UY"
                                     )}
                                 </p>
+
+                                {actividad.imagenUrl && (
+                                    <div>
+                                        <img
+                                            src={
+                                                actividad.imagenUrl
+                                            }
+                                            alt={
+                                                actividad.titulo
+                                            }
+                                            style={{
+                                                width: "250px",
+                                                maxWidth: "100%",
+                                                borderRadius: "10px"
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                <ActivityImageUpload
+                                    actividadId={
+                                        actividad._id
+                                    }
+                                    onImagenSubida={() =>
+                                        cargarActividadesPagina(
+                                            paginacion
+                                                ?.paginaActual ||
+                                                1,
+                                            filtrosActuales
+                                        )
+                                    }
+                                />
 
                                 <button
                                     type="button"
