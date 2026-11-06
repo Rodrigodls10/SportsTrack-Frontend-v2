@@ -39,6 +39,10 @@ const ActivitiesPage = () => {
         state => state.activities.paginacion
     );
 
+    const categorias = useSelector(
+        state => state.categories.categorias
+    );
+
     const limite = 5;
 
     const cargarActividadesPagina = async (
@@ -181,6 +185,21 @@ const ActivitiesPage = () => {
         }
     };
 
+    const obtenerNombreCategoria = (categoriaActividad) => {
+        const idCategoria =
+            categoriaActividad?._id ||
+            categoriaActividad;
+
+        const categoria = categorias.find(
+            categoria =>
+                categoria._id === idCategoria
+        );
+
+        return categoria
+            ? categoria.nombre
+            : "Sin categoría";
+    };
+
     return (
         <div>
             <Navbar />
@@ -230,6 +249,24 @@ const ActivitiesPage = () => {
                                             .duracionMinutos
                                     }{" "}
                                     minutos
+                                </p>
+
+                                <p>
+                                    Categoría:{" "}
+                                    {
+                                        obtenerNombreCategoria(
+                                            actividad.categoria
+                                        )
+                                    }
+                                </p>
+
+                                <p>
+                                    Fecha:{" "}
+                                    {new Date(
+                                        actividad.fecha
+                                    ).toLocaleDateString(
+                                        "es-UY"
+                                    )}
                                 </p>
 
                                 <button
