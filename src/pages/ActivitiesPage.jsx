@@ -12,7 +12,7 @@ import Navbar from "../components/layout/Navbar";
 import ActivityForm from "../components/activities/ActivityForm";
 import EditActivityForm from "../components/activities/EditActivityForm";
 import ActivityFilters from "../components/activities/ActivityFilters";
-import ActivityImageUpload from "../components/activities/ActivityImageUpload";
+import ActivityCard from "../components/activities/ActivityCard";
 
 import api from "../api/api";
 
@@ -61,7 +61,8 @@ const ActivitiesPage = () => {
                     },
 
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization:
+                            `Bearer ${token}`
                     }
                 }
             );
@@ -136,7 +137,9 @@ const ActivitiesPage = () => {
 
     }, [dispatch, token]);
 
-    const filtrarActividades = async (filtros) => {
+    const filtrarActividades = async (
+        filtros
+    ) => {
         setFiltrosActuales(filtros);
 
         await cargarActividadesPagina(
@@ -145,14 +148,18 @@ const ActivitiesPage = () => {
         );
     };
 
-    const cambiarPagina = async (pagina) => {
+    const cambiarPagina = async (
+        pagina
+    ) => {
         await cargarActividadesPagina(
             pagina,
             filtrosActuales
         );
     };
 
-    const eliminarActividad = async (id) => {
+    const eliminarActividad = async (
+        id
+    ) => {
         const confirmar = window.confirm(
             "¿Seguro que querés eliminar esta actividad?"
         );
@@ -186,7 +193,9 @@ const ActivitiesPage = () => {
         }
     };
 
-    const obtenerNombreCategoria = (categoriaActividad) => {
+    const obtenerNombreCategoria = (
+        categoriaActividad
+    ) => {
         const idCategoria =
             categoriaActividad?._id ||
             categoriaActividad;
@@ -201,173 +210,163 @@ const ActivitiesPage = () => {
             : "Sin categoría";
     };
 
+    const actualizarActividades = async () => {
+        await cargarActividadesPagina(
+            paginacion?.paginaActual || 1,
+            filtrosActuales
+        );
+    };
+
     return (
-        <div>
+        <div className="activities-page">
             <Navbar />
 
-            <h1>Mis actividades</h1>
+            <main className="activities-container">
 
-            <ActivityForm />
+                <section className="activities-header">
+                    <div>
+                        <h1>
+                            Mis actividades
+                        </h1>
 
-            <ActivityFilters
-                onFiltrar={filtrarActividades}
-            />
-
-            {actividades.length === 0 ? (
-                <p>
-                    No se encontraron actividades.
-                </p>
-            ) : (
-                actividades.map(actividad => (
-                    <div key={actividad._id}>
-
-                        {actividadEditando ===
-                        actividad._id ? (
-                            <EditActivityForm
-                                actividad={actividad}
-                                cancelarEdicion={() =>
-                                    setActividadEditando(
-                                        null
-                                    )
-                                }
-                            />
-                        ) : (
-                            <>
-                                <h3>
-                                    {actividad.titulo}
-                                </h3>
-
-                                <p>
-                                    {
-                                        actividad.descripcion
-                                    }
-                                </p>
-
-                                <p>
-                                    Duración:{" "}
-                                    {
-                                        actividad
-                                            .duracionMinutos
-                                    }{" "}
-                                    minutos
-                                </p>
-
-                                <p>
-                                    Categoría:{" "}
-                                    {
-                                        obtenerNombreCategoria(
-                                            actividad.categoria
-                                        )
-                                    }
-                                </p>
-
-                                <p>
-                                    Fecha:{" "}
-                                    {new Date(
-                                        actividad.fecha
-                                    ).toLocaleDateString(
-                                        "es-UY"
-                                    )}
-                                </p>
-
-                                {actividad.imagenUrl && (
-                                    <div>
-                                        <img
-                                            src={
-                                                actividad.imagenUrl
-                                            }
-                                            alt={
-                                                actividad.titulo
-                                            }
-                                            style={{
-                                                width: "250px",
-                                                maxWidth: "100%",
-                                                borderRadius: "10px"
-                                            }}
-                                        />
-                                    </div>
-                                )}
-
-                                <ActivityImageUpload
-                                    actividadId={
-                                        actividad._id
-                                    }
-                                    onImagenSubida={() =>
-                                        cargarActividadesPagina(
-                                            paginacion
-                                                ?.paginaActual ||
-                                                1,
-                                            filtrosActuales
-                                        )
-                                    }
-                                />
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setActividadEditando(
-                                            actividad._id
-                                        )
-                                    }
-                                >
-                                    Editar
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        eliminarActividad(
-                                            actividad._id
-                                        )
-                                    }
-                                >
-                                    Eliminar
-                                </button>
-                            </>
-                        )}
-
+                        <p>
+                            Gestioná tus entrenamientos,
+                            imágenes y análisis deportivos.
+                        </p>
                     </div>
-                ))
-            )}
+                </section>
 
-            {paginacion && (
-                <div>
-                    <button
-                        type="button"
-                        disabled={
-                            paginacion.paginaActual <= 1
-                        }
-                        onClick={() =>
-                            cambiarPagina(
-                                paginacion.paginaActual - 1
-                            )
-                        }
-                    >
-                        Anterior
-                    </button>
+                <section className="activity-create-section">
+                    <ActivityForm />
+                </section>
 
-                    <span>
-                        Página{" "}
-                        {paginacion.paginaActual} de{" "}
-                        {paginacion.totalPaginas}
-                    </span>
+                <section className="activity-filters-section">
+                    <ActivityFilters
+                        onFiltrar={
+                            filtrarActividades
+                        }
+                    />
+                </section>
 
-                    <button
-                        type="button"
-                        disabled={
-                            paginacion.paginaActual >=
-                            paginacion.totalPaginas
-                        }
-                        onClick={() =>
-                            cambiarPagina(
-                                paginacion.paginaActual + 1
-                            )
-                        }
-                    >
-                        Siguiente
-                    </button>
-                </div>
-            )}
+                <section className="activities-list-section">
+
+                    {actividades.length === 0 ? (
+                        <div className="activities-empty">
+                            <h3>
+                                No se encontraron actividades
+                            </h3>
+
+                            <p>
+                                Creá una actividad o modificá
+                                los filtros de búsqueda.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="activities-grid">
+
+                            {actividades.map(
+                                actividad => (
+                                    <div
+                                        key={
+                                            actividad._id
+                                        }
+                                    >
+                                        {actividadEditando ===
+                                        actividad._id ? (
+                                            <EditActivityForm
+                                                actividad={
+                                                    actividad
+                                                }
+                                                cancelarEdicion={() =>
+                                                    setActividadEditando(
+                                                        null
+                                                    )
+                                                }
+                                            />
+                                        ) : (
+                                            <ActivityCard
+                                                actividad={
+                                                    actividad
+                                                }
+                                                nombreCategoria={
+                                                    obtenerNombreCategoria(
+                                                        actividad.categoria
+                                                    )
+                                                }
+                                                onEditar={() =>
+                                                    setActividadEditando(
+                                                        actividad._id
+                                                    )
+                                                }
+                                                onEliminar={() =>
+                                                    eliminarActividad(
+                                                        actividad._id
+                                                    )
+                                                }
+                                                onActualizar={
+                                                    actualizarActividades
+                                                }
+                                            />
+                                        )}
+                                    </div>
+                                )
+                            )}
+
+                        </div>
+                    )}
+
+                </section>
+
+                {paginacion && (
+                    <section className="activities-pagination">
+
+                        <button
+                            type="button"
+                            disabled={
+                                paginacion.paginaActual <=
+                                1
+                            }
+                            onClick={() =>
+                                cambiarPagina(
+                                    paginacion.paginaActual -
+                                        1
+                                )
+                            }
+                        >
+                            ← Anterior
+                        </button>
+
+                        <span>
+                            Página{" "}
+                            {
+                                paginacion.paginaActual
+                            }{" "}
+                            de{" "}
+                            {
+                                paginacion.totalPaginas
+                            }
+                        </span>
+
+                        <button
+                            type="button"
+                            disabled={
+                                paginacion.paginaActual >=
+                                paginacion.totalPaginas
+                            }
+                            onClick={() =>
+                                cambiarPagina(
+                                    paginacion.paginaActual +
+                                        1
+                                )
+                            }
+                        >
+                            Siguiente →
+                        </button>
+
+                    </section>
+                )}
+
+            </main>
         </div>
     );
 };
