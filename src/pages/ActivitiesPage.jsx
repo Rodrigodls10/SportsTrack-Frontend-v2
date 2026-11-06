@@ -24,6 +24,9 @@ const ActivitiesPage = () => {
     const [actividadEditando, setActividadEditando] =
         useState(null);
 
+    const [filtrosActuales, setFiltrosActuales] =
+        useState({});
+
     const token = useSelector(
         state => state.auth.token
     );
@@ -32,17 +35,65 @@ const ActivitiesPage = () => {
         state => state.activities.actividades
     );
 
+    const paginacion = useSelector(
+        state => state.activities.paginacion
+    );
+
+    const limite = 5;
+
+    const cargarActividadesPagina = async (
+        pagina = 1,
+        filtros = filtrosActuales
+    ) => {
+        try {
+            const respuesta = await api.get(
+                "/activities",
+                {
+                    params: {
+                        ...filtros,
+                        page: pagina,
+                        limit: limite
+                    },
+
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            dispatch(
+                cargarActividades(
+                    respuesta.data
+                )
+            );
+
+        } catch (error) {
+            console.log(
+                "Error al cargar actividades:",
+                error.response?.data ||
+                error.message
+            );
+        }
+    };
+
     useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const respuestaActividades = await api.get(
-                    "/activities",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
+                const respuestaActividades =
+                    await api.get(
+                        "/activities",
+                        {
+                            params: {
+                                page: 1,
+                                limit: limite
+                            },
+
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
                         }
-                    }
-                );
+                    );
 
                 dispatch(
                     cargarActividades(
@@ -50,14 +101,16 @@ const ActivitiesPage = () => {
                     )
                 );
 
-                const respuestaCategorias = await api.get(
-                    "/categories",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
+                const respuestaCategorias =
+                    await api.get(
+                        "/categories",
+                        {
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
                         }
-                    }
-                );
+                    );
 
                 dispatch(
                     cargarCategorias(
@@ -79,31 +132,19 @@ const ActivitiesPage = () => {
     }, [dispatch, token]);
 
     const filtrarActividades = async (filtros) => {
-        try {
-            const respuesta = await api.get(
-                "/activities",
-                {
-                    params: filtros,
+        setFiltrosActuales(filtros);
 
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
+        await cargarActividadesPagina(
+            1,
+            filtros
+        );
+    };
 
-            dispatch(
-                cargarActividades(
-                    respuesta.data
-                )
-            );
-
-        } catch (error) {
-            console.log(
-                "Error al filtrar:",
-                error.response?.data ||
-                error.message
-            );
-        }
+    const cambiarPagina = async (pagina) => {
+        await cargarActividadesPagina(
+            pagina,
+            filtrosActuales
+        );
     };
 
     const eliminarActividad = async (id) => {
@@ -120,24 +161,15 @@ const ActivitiesPage = () => {
                 `/activities/${id}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization:
+                            `Bearer ${token}`
                     }
                 }
             );
 
-            const respuesta = await api.get(
-                "/activities",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
-            dispatch(
-                cargarActividades(
-                    respuesta.data
-                )
+            await cargarActividadesPagina(
+                paginacion?.paginaActual || 1,
+                filtrosActuales
             );
 
         } catch (error) {
@@ -169,11 +201,14 @@ const ActivitiesPage = () => {
                 actividades.map(actividad => (
                     <div key={actividad._id}>
 
-                        {actividadEditando === actividad._id ? (
+                        {actividadEditando ===
+                        actividad._id ? (
                             <EditActivityForm
                                 actividad={actividad}
                                 cancelarEdicion={() =>
-                                    setActividadEditando(null)
+                                    setActividadEditando(
+                                        null
+                                    )
                                 }
                             />
                         ) : (
@@ -183,12 +218,18 @@ const ActivitiesPage = () => {
                                 </h3>
 
                                 <p>
-                                    {actividad.descripcion}
+                                    {
+                                        actividad.descripcion
+                                    }
                                 </p>
 
                                 <p>
                                     Duración:{" "}
-                                    {actividad.duracionMinutos} minutos
+                                    {
+                                        actividad
+                                            .duracionMinutos
+                                    }{" "}
+                                    minutos
                                 </p>
 
                                 <button
@@ -217,6 +258,45 @@ const ActivitiesPage = () => {
 
                     </div>
                 ))
+            )}
+
+            {paginacion && (
+                <div>
+                    <button
+                        type="button"
+                        disabled={
+                            paginacion.paginaActual <= 1
+                        }
+                        onClick={() =>
+                            cambiarPagina(
+                                paginacion.paginaActual - 1
+                            )
+                        }
+                    >
+                        Anterior
+                    </button>
+
+                    <span>
+                        Página{" "}
+                        {paginacion.paginaActual} de{" "}
+                        {paginacion.totalPaginas}
+                    </span>
+
+                    <button
+                        type="button"
+                        disabled={
+                            paginacion.paginaActual >=
+                            paginacion.totalPaginas
+                        }
+                        onClick={() =>
+                            cambiarPagina(
+                                paginacion.paginaActual + 1
+                            )
+                        }
+                    >
+                        Siguiente
+                    </button>
+                </div>
             )}
         </div>
     );
