@@ -1,36 +1,61 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 import api from "../../api/api";
 import { activitySchema } from "../../validators/activity.validator";
-import { cargarActividades } from "../../features/activities.slice";
 
-const ActivityForm = () => {
-    const dispatch = useDispatch();
-
+const ActivityForm = ({
+    totalActividades,
+    onActividadCreada
+}) => {
     const token = useSelector(
         state => state.auth.token
+    );
+
+    const usuario = useSelector(
+        state => state.auth.user
     );
 
     const categorias = useSelector(
         state => state.categories.categorias
     );
 
-    const [errorActividad, setErrorActividad] = useState("");
+    const [errorActividad, setErrorActividad] =
+        useState("");
 
     const {
         register,
         handleSubmit,
         reset,
-        formState: { errors, isValid }
+        formState: {
+            errors,
+            isValid,
+            isSubmitting
+        }
     } = useForm({
         resolver: joiResolver(activitySchema),
         mode: "onChange"
     });
 
+    const alcanzoLimite =
+        usuario?.plan === "PLUS" &&
+        totalActividades >= 4;
+
     const onSubmit = async (data) => {
+        if (alcanzoLimite) {
+            const mensaje =
+                "Tu plan PLUS permite un máximo de 4 actividades";
+
+            setErrorActividad(mensaje);
+
+            toast.error(mensaje);
+
+            return;
+        }
+
         try {
             setErrorActividad("");
 
@@ -39,37 +64,41 @@ const ActivityForm = () => {
                 data,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization:
+                            `Bearer ${token}`
                     }
                 }
             );
 
-            const respuesta = await api.get(
-                "/activities",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-
-            dispatch(
-                cargarActividades(respuesta.data)
-            );
+            await onActividadCreada();
 
             reset();
 
+            toast.success(
+                "Actividad creada correctamente"
+            );
+
         } catch (error) {
-            setErrorActividad(
+            const mensaje =
                 error.response?.data?.error ||
-                "No se pudo crear la actividad"
+                error.response?.data?.mensaje ||
+                "No se pudo crear la actividad";
+
+            setErrorActividad(
+                mensaje
+            );
+
+            toast.error(
+                mensaje
             );
         }
     };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <h2>Nueva actividad</h2>
+            <h2>
+                Nueva actividad
+            </h2>
 
             <div>
                 <label htmlFor="titulo">
@@ -116,13 +145,19 @@ const ActivityForm = () => {
                     id="duracionMinutos"
                     {...register(
                         "duracionMinutos",
-                        { valueAsNumber: true }
+                        {
+                            valueAsNumber: true
+                        }
                     )}
                 />
 
                 {errors.duracionMinutos && (
                     <span>
-                        {errors.duracionMinutos.message}
+                        {
+                            errors
+                                .duracionMinutos
+                                .message
+                        }
                     </span>
                 )}
             </div>
@@ -158,14 +193,16 @@ const ActivityForm = () => {
                         Seleccionar categoría
                     </option>
 
-                    {categorias.map(categoria => (
-                        <option
-                            key={categoria._id}
-                            value={categoria._id}
-                        >
-                            {categoria.nombre}
-                        </option>
-                    ))}
+                    {categorias.map(
+                        categoria => (
+                            <option
+                                key={categoria._id}
+                                value={categoria._id}
+                            >
+                                {categoria.nombre}
+                            </option>
+                        )
+                    )}
                 </select>
 
                 {errors.categoria && (
@@ -176,14 +213,29 @@ const ActivityForm = () => {
             </div>
 
             {errorActividad && (
-                <p>{errorActividad}</p>
+                <p>
+                    {errorActividad}
+                </p>
+            )}
+
+            {alcanzoLimite && (
+                <p>
+                    Alcanzaste el límite de 4
+                    actividades de tu plan PLUS.
+                </p>
             )}
 
             <button
                 type="submit"
-                disabled={!isValid}
+                disabled={
+                    !isValid ||
+                    alcanzoLimite ||
+                    isSubmitting
+                }
             >
-                Agregar actividad
+                {isSubmitting
+                    ? "Creando..."
+                    : "Agregar actividad"}
             </button>
         </form>
     );

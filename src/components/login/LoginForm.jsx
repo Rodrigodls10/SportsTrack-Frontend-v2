@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import { loginSchema } from "../../validators/login.validator";
 import api from "../../api/api";
@@ -12,12 +13,17 @@ const LoginForm = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const [errorLogin, setErrorLogin] = useState("");
+    const [errorLogin, setErrorLogin] =
+        useState("");
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid }
+        formState: {
+            errors,
+            isValid,
+            isSubmitting
+        }
     } = useForm({
         resolver: joiResolver(loginSchema),
         mode: "onChange"
@@ -27,7 +33,10 @@ const LoginForm = () => {
         try {
             setErrorLogin("");
 
-            const respuesta = await api.post("/auth/login", data);
+            const respuesta = await api.post(
+                "/auth/login",
+                data
+            );
 
             localStorage.setItem(
                 "token",
@@ -36,73 +45,98 @@ const LoginForm = () => {
 
             localStorage.setItem(
                 "usuario",
-                JSON.stringify(respuesta.data.user)
+                JSON.stringify(
+                    respuesta.data.user
+                )
             );
 
-            dispatch(login({
-                user: respuesta.data.user,
-                token: respuesta.data.token
-            }));
+            dispatch(
+                login({
+                    user: respuesta.data.user,
+                    token: respuesta.data.token
+                })
+            );
+
+            toast.success(
+                "Sesión iniciada correctamente"
+            );
 
             navigate("/dashboard");
 
         } catch (error) {
-            setErrorLogin(
+            const mensaje =
                 error.response?.data?.error ||
-                "No se pudo iniciar sesión"
-            );
+                error.response?.data?.mensaje ||
+                "No se pudo iniciar sesión";
+
+            setErrorLogin(mensaje);
+
+            toast.error(mensaje);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <div>
+        <form
+            className="auth-form"
+            onSubmit={handleSubmit(onSubmit)}
+        >
+            <div className="auth-field">
                 <label htmlFor="email">
-                    Email:
+                    Email
                 </label>
 
                 <input
                     type="email"
                     id="email"
+                    placeholder="nombre@ejemplo.com"
+                    autoComplete="email"
                     {...register("email")}
                 />
 
                 {errors.email && (
-                    <span>
+                    <span className="auth-field-error">
                         {errors.email.message}
                     </span>
                 )}
             </div>
 
-            <div>
+            <div className="auth-field">
                 <label htmlFor="password">
-                    Contraseña:
+                    Contraseña
                 </label>
 
                 <input
                     type="password"
                     id="password"
+                    placeholder="Ingresá tu contraseña"
+                    autoComplete="current-password"
                     {...register("password")}
                 />
 
                 {errors.password && (
-                    <span>
+                    <span className="auth-field-error">
                         {errors.password.message}
                     </span>
                 )}
             </div>
 
             {errorLogin && (
-                <p>
+                <div className="auth-form-error">
                     {errorLogin}
-                </p>
+                </div>
             )}
 
             <button
+                className="auth-submit-button"
                 type="submit"
-                disabled={!isValid}
+                disabled={
+                    !isValid ||
+                    isSubmitting
+                }
             >
-                Ingresar
+                {isSubmitting
+                    ? "Ingresando..."
+                    : "Ingresar"}
             </button>
         </form>
     );

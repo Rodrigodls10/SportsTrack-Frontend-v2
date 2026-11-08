@@ -1,84 +1,115 @@
-import ActivityImageUpload from "./ActivityImageUpload";
-import ActivityAIAnalysis from "./ActivityAIAnalysis";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
-const ActivityCard = ({
-    actividad,
-    nombreCategoria,
-    onEditar,
-    onEliminar,
-    onActualizar
+import api from "../../api/api";
+
+const ActivityImageUpload = ({
+    actividadId,
+    onImagenSubida
 }) => {
+    const token = useSelector(
+        state => state.auth.token
+    );
+
+    const [imagen, setImagen] =
+        useState(null);
+
+    const [error, setError] =
+        useState("");
+
+    const [subiendo, setSubiendo] =
+        useState(false);
+
+    const subirImagen = async () => {
+        if (!imagen) {
+            const mensaje =
+                "Seleccioná una imagen";
+
+            setError(mensaje);
+            toast.error(mensaje);
+
+            return;
+        }
+
+        try {
+            setError("");
+            setSubiendo(true);
+
+            const formData =
+                new FormData();
+
+            formData.append(
+                "imagen",
+                imagen
+            );
+
+            await api.post(
+                `/activities/${actividadId}/image`,
+                formData,
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
+                }
+            );
+
+            setImagen(null);
+
+            await onImagenSubida();
+
+            toast.success(
+                "Imagen subida correctamente"
+            );
+
+        } catch (error) {
+            const mensaje =
+                error.response?.data?.error ||
+                error.response?.data?.mensaje ||
+                "No se pudo subir la imagen";
+
+            setError(mensaje);
+
+            toast.error(mensaje);
+
+        } finally {
+            setSubiendo(false);
+        }
+    };
+
     return (
-        <article className="activity-card">
+        <div>
+            <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                    setImagen(
+                        e.target.files[0]
+                    )
+                }
+            />
 
-            {actividad.imagenUrl && (
-                <div className="activity-card-image">
-                    <img
-                        src={actividad.imagenUrl}
-                        alt={actividad.titulo}
-                    />
-                </div>
-            )}
+            <button
+                type="button"
+                onClick={subirImagen}
+                disabled={
+                    !imagen ||
+                    subiendo
+                }
+            >
+                {subiendo
+                    ? "Subiendo..."
+                    : "Subir imagen"}
+            </button>
 
-            <div className="activity-card-content">
-
-                <div className="activity-card-header">
-                    <span className="activity-category">
-                        {nombreCategoria}
-                    </span>
-
-                    <span className="activity-date">
-                        {new Date(
-                            actividad.fecha
-                        ).toLocaleDateString("es-UY")}
-                    </span>
-                </div>
-
-                <h3>
-                    {actividad.titulo}
-                </h3>
-
-                <p className="activity-description">
-                    {actividad.descripcion}
+            {error && (
+                <p>
+                    {error}
                 </p>
-
-                <div className="activity-info">
-                    <span>
-                        ⏱️ {actividad.duracionMinutos} min
-                    </span>
-                </div>
-
-                <ActivityAIAnalysis
-                    actividad={actividad}
-                    onAnalisisActualizado={onActualizar}
-                />
-
-                <ActivityImageUpload
-                    actividadId={actividad._id}
-                    onImagenSubida={onActualizar}
-                />
-
-                <div className="activity-actions">
-                    <button
-                        type="button"
-                        className="btn-edit"
-                        onClick={onEditar}
-                    >
-                        Editar
-                    </button>
-
-                    <button
-                        type="button"
-                        className="btn-delete"
-                        onClick={onEliminar}
-                    >
-                        Eliminar
-                    </button>
-                </div>
-
-            </div>
-        </article>
+            )}
+        </div>
     );
 };
 
-export default ActivityCard;
+export default ActivityImageUpload;

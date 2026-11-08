@@ -1,71 +1,105 @@
 import {
-    useDispatch,
     useSelector
 } from "react-redux";
 
-import { useNavigate } from "react-router-dom";
-
+import Navbar from "../components/layout/Navbar";
+import PlanUsageCard from "../components/dashboard/PlanUsageCard";
 import UpgradePlanButton from "../components/dashboard/UpgradePlanButton";
 import ActivityChart from "../components/dashboard/ActivityChart";
 
-import Navbar from "../components/layout/Navbar";
-import PlanUsageCard from "../components/dashboard/PlanUsageCard";
-
-import { logout } from "../features/auth.slice";
-
 const DashboardPage = () => {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-
     const usuario = useSelector(
         state => state.auth.user
     );
 
-    const cerrarSesion = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("usuario");
-
-        dispatch(logout());
-
-        navigate("/login");
-    };
-
     return (
-        <div>
+        <div className="dashboard-page">
             <Navbar />
 
-            <h1>
-                SportsTrack
-            </h1>
+            <main className="dashboard-container">
 
-            <h2>
-                Bienvenido, {usuario?.username}
-            </h2>
+                <section className="dashboard-header">
 
-            <p>
-                Email: {usuario?.email}
-            </p>
+                    <div>
+                        <span className="dashboard-eyebrow">
+                            PANEL PERSONAL
+                        </span>
 
-            <p>
-                Rol: {usuario?.role}
-            </p>
+                        <h1>
+                            Bienvenido, {usuario?.username}
+                        </h1>
 
-            <p>
-                Plan: {usuario?.plan}
-            </p>
+                        <p>
+                            Revisá tu actividad, tu plan
+                            y el progreso de tus entrenamientos.
+                        </p>
+                    </div>
 
-            <PlanUsageCard />
+                    <div className="dashboard-user-card">
 
-            <UpgradePlanButton />
+                        <div className="dashboard-user-avatar">
+                            {usuario?.username
+                                ?.charAt(0)
+                                .toUpperCase()}
+                        </div>
 
-            <ActivityChart />
+                        <div>
+                            <strong>
+                                {usuario?.username}
+                            </strong>
 
-            <button
-                type="button"
-                onClick={cerrarSesion}
-            >
-                Cerrar sesión
-            </button>
+                            <span>
+                                {usuario?.email}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section className="dashboard-info-grid">
+
+                    <article className="dashboard-info-card">
+                        <span>
+                            Rol
+                        </span>
+
+                        <strong>
+                            {usuario?.role}
+                        </strong>
+                    </article>
+
+                    <article className="dashboard-info-card">
+                        <span>
+                            Plan actual
+                        </span>
+
+                        <strong>
+                            {usuario?.plan}
+                        </strong>
+                    </article>
+
+                </section>
+
+                <section className="dashboard-main-grid">
+
+                    <div className="dashboard-plan-column">
+
+                        <PlanUsageCard />
+
+                        <UpgradePlanButton />
+
+                    </div>
+
+                    <div className="dashboard-chart-column">
+
+                        <ActivityChart />
+
+                    </div>
+
+                </section>
+
+            </main>
         </div>
     );
 };

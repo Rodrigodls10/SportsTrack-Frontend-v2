@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 import { registerSchema } from "../../validators/register.validator";
 import api from "../../api/api";
@@ -12,12 +13,17 @@ const RegisterForm = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const [errorRegistro, setErrorRegistro] = useState("");
+    const [errorRegistro, setErrorRegistro] =
+        useState("");
 
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid }
+        formState: {
+            errors,
+            isValid,
+            isSubmitting
+        }
     } = useForm({
         resolver: joiResolver(registerSchema),
         mode: "onChange"
@@ -27,7 +33,10 @@ const RegisterForm = () => {
         try {
             setErrorRegistro("");
 
-            const respuesta = await api.post("/auth/register", data);
+            const respuesta = await api.post(
+                "/auth/register",
+                data
+            );
 
             localStorage.setItem(
                 "token",
@@ -36,107 +45,144 @@ const RegisterForm = () => {
 
             localStorage.setItem(
                 "usuario",
-                JSON.stringify(respuesta.data.user)
+                JSON.stringify(
+                    respuesta.data.user
+                )
             );
 
-            dispatch(login({
-                user: respuesta.data.user,
-                token: respuesta.data.token
-            }));
+            dispatch(
+                login({
+                    user: respuesta.data.user,
+                    token: respuesta.data.token
+                })
+            );
+
+            toast.success(
+                "Usuario registrado correctamente"
+            );
 
             navigate("/dashboard");
 
         } catch (error) {
-            setErrorRegistro(
+            const mensaje =
                 error.response?.data?.error ||
-                "No se pudo registrar el usuario"
-            );
+                error.response?.data?.mensaje ||
+                "No se pudo registrar el usuario";
+
+            setErrorRegistro(mensaje);
+
+            toast.error(mensaje);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <div>
+        <form
+            className="auth-form"
+            onSubmit={handleSubmit(onSubmit)}
+        >
+            <div className="auth-field">
                 <label htmlFor="username">
-                    Usuario:
+                    Usuario
                 </label>
 
                 <input
                     type="text"
                     id="username"
+                    placeholder="Ingresá tu nombre de usuario"
+                    autoComplete="username"
                     {...register("username")}
                 />
 
                 {errors.username && (
-                    <span>
+                    <span className="auth-field-error">
                         {errors.username.message}
                     </span>
                 )}
             </div>
 
-            <div>
+            <div className="auth-field">
                 <label htmlFor="email">
-                    Email:
+                    Email
                 </label>
 
                 <input
                     type="email"
                     id="email"
+                    placeholder="nombre@ejemplo.com"
+                    autoComplete="email"
                     {...register("email")}
                 />
 
                 {errors.email && (
-                    <span>
+                    <span className="auth-field-error">
                         {errors.email.message}
                     </span>
                 )}
             </div>
 
-            <div>
+            <div className="auth-field">
                 <label htmlFor="password">
-                    Contraseña:
+                    Contraseña
                 </label>
 
                 <input
                     type="password"
                     id="password"
+                    placeholder="Creá una contraseña"
+                    autoComplete="new-password"
                     {...register("password")}
                 />
 
                 {errors.password && (
-                    <span>
+                    <span className="auth-field-error">
                         {errors.password.message}
                     </span>
                 )}
             </div>
 
-            <div>
+            <div className="auth-field">
                 <label htmlFor="confirmPassword">
-                    Repetir contraseña:
+                    Repetir contraseña
                 </label>
 
                 <input
                     type="password"
                     id="confirmPassword"
-                    {...register("confirmPassword")}
+                    placeholder="Repetí tu contraseña"
+                    autoComplete="new-password"
+                    {...register(
+                        "confirmPassword"
+                    )}
                 />
 
                 {errors.confirmPassword && (
-                    <span>
-                        {errors.confirmPassword.message}
+                    <span className="auth-field-error">
+                        {
+                            errors
+                                .confirmPassword
+                                .message
+                        }
                     </span>
                 )}
             </div>
 
             {errorRegistro && (
-                <p>{errorRegistro}</p>
+                <div className="auth-form-error">
+                    {errorRegistro}
+                </div>
             )}
 
             <button
+                className="auth-submit-button"
                 type="submit"
-                disabled={!isValid}
+                disabled={
+                    !isValid ||
+                    isSubmitting
+                }
             >
-                Registrarse
+                {isSubmitting
+                    ? "Registrando..."
+                    : "Crear cuenta"}
             </button>
         </form>
     );

@@ -8,6 +8,8 @@ import {
     useSelector
 } from "react-redux";
 
+import { toast } from "react-toastify";
+
 import Navbar from "../components/layout/Navbar";
 import ActivityForm from "../components/activities/ActivityForm";
 import EditActivityForm from "../components/activities/EditActivityForm";
@@ -27,6 +29,9 @@ const ActivitiesPage = () => {
 
     const [filtrosActuales, setFiltrosActuales] =
         useState({});
+
+    const [totalActividades, setTotalActividades] =
+        useState(0);
 
     const token = useSelector(
         state => state.auth.token
@@ -74,10 +79,13 @@ const ActivitiesPage = () => {
             );
 
         } catch (error) {
-            console.log(
-                "Error al cargar actividades:",
-                error.response?.data ||
-                error.message
+            const mensaje =
+                error.response?.data?.error ||
+                error.response?.data?.mensaje ||
+                "No se pudieron cargar las actividades";
+
+            toast.error(
+                mensaje
             );
         }
     };
@@ -107,6 +115,12 @@ const ActivitiesPage = () => {
                     )
                 );
 
+                setTotalActividades(
+                    respuestaActividades.data
+                        .paginacion
+                        .totalRegistros
+                );
+
                 const respuestaCategorias =
                     await api.get(
                         "/categories",
@@ -125,10 +139,13 @@ const ActivitiesPage = () => {
                 );
 
             } catch (error) {
-                console.log(
-                    "Error:",
-                    error.response?.data ||
-                    error.message
+                const mensaje =
+                    error.response?.data?.error ||
+                    error.response?.data?.mensaje ||
+                    "No se pudieron cargar los datos";
+
+                toast.error(
+                    mensaje
                 );
             }
         };
@@ -184,11 +201,25 @@ const ActivitiesPage = () => {
                 filtrosActuales
             );
 
+            setTotalActividades(
+                total => Math.max(
+                    total - 1,
+                    0
+                )
+            );
+
+            toast.success(
+                "Actividad eliminada correctamente"
+            );
+
         } catch (error) {
-            console.log(
-                "Error al eliminar:",
-                error.response?.data ||
-                error.message
+            const mensaje =
+                error.response?.data?.error ||
+                error.response?.data?.mensaje ||
+                "No se pudo eliminar la actividad";
+
+            toast.error(
+                mensaje
             );
         }
     };
@@ -217,6 +248,17 @@ const ActivitiesPage = () => {
         );
     };
 
+    const actividadCreada = async () => {
+        setTotalActividades(
+            total => total + 1
+        );
+
+        await cargarActividadesPagina(
+            paginacion?.paginaActual || 1,
+            filtrosActuales
+        );
+    };
+
     return (
         <div className="activities-page">
             <Navbar />
@@ -237,7 +279,12 @@ const ActivitiesPage = () => {
                 </section>
 
                 <section className="activity-create-section">
-                    <ActivityForm />
+                    <ActivityForm
+                        totalActividades={totalActividades}
+                        onActividadCreada={
+                            actividadCreada
+                        }
+                    />
                 </section>
 
                 <section className="activity-filters-section">
@@ -272,7 +319,7 @@ const ActivitiesPage = () => {
                                         }
                                     >
                                         {actividadEditando ===
-                                        actividad._id ? (
+                                            actividad._id ? (
                                             <EditActivityForm
                                                 actividad={
                                                     actividad
@@ -281,6 +328,9 @@ const ActivitiesPage = () => {
                                                     setActividadEditando(
                                                         null
                                                     )
+                                                }
+                                                onActividadEditada={
+                                                    actualizarActividades
                                                 }
                                             />
                                         ) : (
@@ -329,11 +379,11 @@ const ActivitiesPage = () => {
                             onClick={() =>
                                 cambiarPagina(
                                     paginacion.paginaActual -
-                                        1
+                                    1
                                 )
                             }
                         >
-                            ← Anterior
+                            Anterior
                         </button>
 
                         <span>
@@ -356,11 +406,11 @@ const ActivitiesPage = () => {
                             onClick={() =>
                                 cambiarPagina(
                                     paginacion.paginaActual +
-                                        1
+                                    1
                                 )
                             }
                         >
-                            Siguiente →
+                            Siguiente
                         </button>
 
                     </section>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 import api from "../../api/api";
 
@@ -35,19 +36,30 @@ const ActivityAIAnalysis = ({
 
             await onAnalisisActualizado();
 
+            toast.success(
+                "Análisis generado correctamente"
+            );
+
         } catch (error) {
             if (error.response?.status === 503) {
-                setError(
-                    "El servicio de IA no está disponible en este momento."
-                );
+                const mensaje =
+                    "El servicio de IA no está disponible en este momento.";
+
+                setError(mensaje);
+
+                toast.error(mensaje);
 
                 return;
             }
 
-            setError(
+            const mensaje =
                 error.response?.data?.error ||
-                "No se pudo analizar la actividad"
-            );
+                error.response?.data?.mensaje ||
+                "No se pudo analizar la actividad";
+
+            setError(mensaje);
+
+            toast.error(mensaje);
 
         } finally {
             setAnalizando(false);
@@ -69,15 +81,21 @@ const ActivityAIAnalysis = ({
             </button>
 
             {error && (
-                <p>{error}</p>
+                <p>
+                    {error}
+                </p>
             )}
 
             {actividad.analisisIA && (
                 <div>
-                    <h4>Análisis IA</h4>
+                    <h4>
+                        Análisis IA
+                    </h4>
 
                     <p>
-                        {actividad.analisisIA}
+                        {
+                            actividad.analisisIA
+                        }
                     </p>
                 </div>
             )}

@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 import api from "../../api/api";
 import { activitySchema } from "../../validators/activity.validator";
-import { cargarActividades } from "../../features/activities.slice";
 
 const EditActivityForm = ({
     actividad,
-    cancelarEdicion
+    cancelarEdicion,
+    onActividadEditada
 }) => {
-    const dispatch = useDispatch();
-
     const token = useSelector(
         state => state.auth.token
     );
@@ -29,15 +28,15 @@ const EditActivityForm = ({
         handleSubmit,
         formState: {
             errors,
-            isValid
+            isValid,
+            isSubmitting
         }
     } = useForm({
         resolver: joiResolver(activitySchema),
         mode: "onChange",
 
         defaultValues: {
-            titulo:
-                actividad.titulo,
+            titulo: actividad.titulo,
 
             descripcion:
                 actividad.descripcion,
@@ -47,13 +46,12 @@ const EditActivityForm = ({
 
             fecha:
                 actividad.fecha
-                    ? actividad.fecha.substring(0, 10)
+                    ? actividad.fecha.split("T")[0]
                     : "",
 
             categoria:
                 actividad.categoria?._id ||
-                actividad.categoria ||
-                ""
+                actividad.categoria
         }
     });
 
@@ -72,44 +70,48 @@ const EditActivityForm = ({
                 }
             );
 
-            const respuesta = await api.get(
-                "/activities",
-                {
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                }
-            );
+            await onActividadEditada();
 
-            dispatch(
-                cargarActividades(
-                    respuesta.data
-                )
+            toast.success(
+                "Actividad modificada correctamente"
             );
 
             cancelarEdicion();
 
         } catch (error) {
-            setErrorActividad(
+            const mensaje =
                 error.response?.data?.error ||
-                "No se pudo modificar la actividad"
+                error.response?.data?.mensaje ||
+                "No se pudo modificar la actividad";
+
+            setErrorActividad(
+                mensaje
+            );
+
+            toast.error(
+                mensaje
             );
         }
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <h3>Editar actividad</h3>
+        <form
+            onSubmit={
+                handleSubmit(onSubmit)
+            }
+        >
+            <h3>
+                Editar actividad
+            </h3>
 
             <div>
-                <label htmlFor="edit-titulo">
+                <label htmlFor="titulo">
                     Título:
                 </label>
 
                 <input
                     type="text"
-                    id="edit-titulo"
+                    id="titulo"
                     {...register("titulo")}
                 />
 
@@ -121,30 +123,32 @@ const EditActivityForm = ({
             </div>
 
             <div>
-                <label htmlFor="edit-descripcion">
+                <label htmlFor="descripcion">
                     Descripción:
                 </label>
 
                 <textarea
-                    id="edit-descripcion"
+                    id="descripcion"
                     {...register("descripcion")}
                 />
 
                 {errors.descripcion && (
                     <span>
-                        {errors.descripcion.message}
+                        {
+                            errors.descripcion.message
+                        }
                     </span>
                 )}
             </div>
 
             <div>
-                <label htmlFor="edit-duracion">
+                <label htmlFor="duracionMinutos">
                     Duración en minutos:
                 </label>
 
                 <input
                     type="number"
-                    id="edit-duracion"
+                    id="duracionMinutos"
                     {...register(
                         "duracionMinutos",
                         {
@@ -165,13 +169,13 @@ const EditActivityForm = ({
             </div>
 
             <div>
-                <label htmlFor="edit-fecha">
+                <label htmlFor="fecha">
                     Fecha:
                 </label>
 
                 <input
                     type="date"
-                    id="edit-fecha"
+                    id="fecha"
                     {...register("fecha")}
                 />
 
@@ -183,12 +187,12 @@ const EditActivityForm = ({
             </div>
 
             <div>
-                <label htmlFor="edit-categoria">
+                <label htmlFor="categoria">
                     Categoría:
                 </label>
 
                 <select
-                    id="edit-categoria"
+                    id="categoria"
                     {...register("categoria")}
                 >
                     <option value="">
@@ -209,25 +213,39 @@ const EditActivityForm = ({
 
                 {errors.categoria && (
                     <span>
-                        {errors.categoria.message}
+                        {
+                            errors.categoria.message
+                        }
                     </span>
                 )}
             </div>
 
             {errorActividad && (
-                <p>{errorActividad}</p>
+                <p>
+                    {errorActividad}
+                </p>
             )}
 
             <button
                 type="submit"
-                disabled={!isValid}
+                disabled={
+                    !isValid ||
+                    isSubmitting
+                }
             >
-                Guardar cambios
+                {isSubmitting
+                    ? "Guardando..."
+                    : "Guardar cambios"}
             </button>
 
             <button
                 type="button"
-                onClick={cancelarEdicion}
+                onClick={
+                    cancelarEdicion
+                }
+                disabled={
+                    isSubmitting
+                }
             >
                 Cancelar
             </button>

@@ -3,9 +3,12 @@ import {
     useState
 } from "react";
 
-import { useSelector } from "react-redux";
+import {
+    useSelector
+} from "react-redux";
 
 import api from "../../api/api";
+import { toast } from "react-toastify";
 
 const PlanUsageCard = () => {
     const token = useSelector(
@@ -47,11 +50,15 @@ const PlanUsageCard = () => {
                 );
 
             } catch (error) {
-                console.log(
-                    "Error al cargar uso del plan:",
-                    error.response?.data ||
-                    error.message
+                const mensaje =
+                    error.response?.data?.error ||
+                    error.response?.data?.mensaje ||
+                    "No se pudo cargar la información del plan";
+
+                toast.error(
+                    mensaje
                 );
+
             } finally {
                 setCargando(false);
             }
@@ -63,9 +70,11 @@ const PlanUsageCard = () => {
 
     if (cargando) {
         return (
-            <p>
-                Cargando información del plan...
-            </p>
+            <div className="plan-usage-card">
+                <p className="plan-loading">
+                    Cargando información del plan...
+                </p>
+            </div>
         );
     }
 
@@ -77,44 +86,108 @@ const PlanUsageCard = () => {
             (cantidadActividades / 4) * 100,
             100
         )
-        : 0;
+        : 100;
 
     return (
-        <section>
-            <h3>
-                Uso del plan
-            </h3>
+        <section className="plan-usage-card">
 
-            <p>
-                Plan actual:{" "}
-                <strong>
+            <div className="plan-usage-header">
+
+                <div>
+                    <span className="plan-usage-label">
+                        TU SUSCRIPCIÓN
+                    </span>
+
+                    <h3>
+                        Uso del plan
+                    </h3>
+                </div>
+
+                <span
+                    className={
+                        esPlus
+                            ? "plan-badge plan-plus"
+                            : "plan-badge plan-premium"
+                    }
+                >
                     {usuario?.plan}
-                </strong>
-            </p>
+                </span>
+
+            </div>
 
             {esPlus ? (
                 <>
-                    <p>
-                        Actividades utilizadas:{" "}
-                        {cantidadActividades} de 4
-                    </p>
+                    <div className="plan-usage-number">
 
-                    <p>
-                        Uso:{" "}
-                        {porcentajeUso.toFixed(0)}%
-                    </p>
+                        <strong>
+                            {cantidadActividades}
+                        </strong>
 
-                    <progress
-                        value={cantidadActividades}
-                        max="4"
-                    />
+                        <span>
+                            / 4 actividades
+                        </span>
+
+                    </div>
+
+                    <div className="plan-progress-info">
+
+                        <span>
+                            Uso del plan
+                        </span>
+
+                        <strong>
+                            {porcentajeUso.toFixed(0)}%
+                        </strong>
+
+                    </div>
+
+                    <div className="plan-progress">
+
+                        <div
+                            className="plan-progress-fill"
+                            style={{
+                                width:
+                                    `${porcentajeUso}%`
+                            }}
+                        />
+
+                    </div>
+
+                    <p className="plan-usage-description">
+                        Te quedan{" "}
+                        <strong>
+                            {
+                                Math.max(
+                                    4 - cantidadActividades,
+                                    0
+                                )
+                            }
+                        </strong>{" "}
+                        actividades disponibles
+                        en tu plan PLUS.
+                    </p>
                 </>
             ) : (
-                <p>
-                    Actividades registradas:{" "}
-                    {cantidadActividades}
-                </p>
+                <>
+                    <div className="plan-usage-number">
+
+                        <strong>
+                            {cantidadActividades}
+                        </strong>
+
+                        <span>
+                            actividades registradas
+                        </span>
+
+                    </div>
+
+                    <p className="plan-usage-description">
+                        Tu plan PREMIUM no tiene
+                        límite de actividades.
+                    </p>
+                </>
             )}
+
         </section>
     );
 };

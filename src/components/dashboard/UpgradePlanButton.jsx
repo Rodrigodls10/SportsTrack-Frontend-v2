@@ -2,6 +2,8 @@ import {
     useState
 } from "react";
 
+import { toast } from "react-toastify";
+
 import {
     useDispatch,
     useSelector
@@ -64,11 +66,24 @@ const UpgradePlanButton = () => {
                 )
             );
 
-        } catch (error) {
-            setError(
-                error.response?.data?.error ||
-                "No se pudo actualizar el plan"
+            toast.success(
+                "Plan actualizado a PREMIUM"
             );
+
+        } catch (error) {
+            const mensaje =
+                error.response?.data?.error ||
+                error.response?.data?.mensaje ||
+                "No se pudo actualizar el plan";
+
+            setError(
+                mensaje
+            );
+
+            toast.error(
+                mensaje
+            );
+
         } finally {
             setActualizando(false);
         }
@@ -79,9 +94,26 @@ const UpgradePlanButton = () => {
     }
 
     return (
-        <div>
+        <section className="upgrade-plan-card">
+
+            <div>
+                <span className="upgrade-label">
+                    PREMIUM
+                </span>
+
+                <h3>
+                    Entrená sin límites
+                </h3>
+
+                <p>
+                    Pasá a PREMIUM y registrá
+                    todas las actividades que quieras.
+                </p>
+            </div>
+
             <button
                 type="button"
+                className="upgrade-plan-button"
                 onClick={mejorarPlan}
                 disabled={actualizando}
             >
@@ -91,9 +123,12 @@ const UpgradePlanButton = () => {
             </button>
 
             {error && (
-                <p>{error}</p>
+                <p className="upgrade-error">
+                    {error}
+                </p>
             )}
-        </div>
+
+        </section>
     );
 };
 

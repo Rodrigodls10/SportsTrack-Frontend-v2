@@ -7,6 +7,8 @@ import {
     useSelector
 } from "react-redux";
 
+import { toast } from "react-toastify";
+
 import {
     Bar
 } from "react-chartjs-2";
@@ -48,27 +50,48 @@ const ActivityChart = () => {
     useEffect(() => {
         const cargarDatos = async () => {
             try {
-                const respuesta = await api.get(
-                    "/activities",
-                    {
-                        params: {
-                            page: 1,
-                            limit: 100
-                        },
+                setCargando(true);
 
-                        headers: {
-                            Authorization:
-                                `Bearer ${token}`
+                let pagina = 1;
+                let totalPaginas = 1;
+
+                let todasLasActividades = [];
+
+                do {
+                    const respuesta = await api.get(
+                        "/activities",
+                        {
+                            params: {
+                                page: pagina,
+                                limit: 100
+                            },
+
+                            headers: {
+                                Authorization:
+                                    `Bearer ${token}`
+                            }
                         }
-                    }
-                );
+                    );
 
-                const actividades =
-                    respuesta.data.actividades;
+                    todasLasActividades = [
+                        ...todasLasActividades,
+                        ...respuesta.data.actividades
+                    ];
+
+                    totalPaginas =
+                        respuesta.data
+                            .paginacion
+                            .totalPaginas;
+
+                    pagina++;
+
+                } while (
+                    pagina <= totalPaginas
+                );
 
                 const minutosPorCategoria = {};
 
-                actividades.forEach(
+                todasLasActividades.forEach(
                     actividad => {
                         const categoria =
                             actividad.categoria?.nombre ||
@@ -76,7 +99,7 @@ const ActivityChart = () => {
 
                         if (
                             !minutosPorCategoria[
-                                categoria
+                            categoria
                             ]
                         ) {
                             minutosPorCategoria[
@@ -114,11 +137,15 @@ const ActivityChart = () => {
                 });
 
             } catch (error) {
-                console.log(
-                    "Error al cargar gráfico:",
-                    error.response?.data ||
-                    error.message
+                const mensaje =
+                    error.response?.data?.error ||
+                    error.response?.data?.mensaje ||
+                    "No se pudo cargar el gráfico";
+
+                toast.error(
+                    mensaje
                 );
+
             } finally {
                 setCargando(false);
             }
@@ -149,6 +176,7 @@ const ActivityChart = () => {
 
     return (
         <section className="activity-chart-card">
+
             <div className="activity-chart-header">
                 <div>
                     <h3>
@@ -156,12 +184,14 @@ const ActivityChart = () => {
                     </h3>
 
                     <p>
-                        Distribución de tu tiempo de entrenamiento
+                        Distribución de tu tiempo
+                        de entrenamiento
                     </p>
                 </div>
             </div>
 
             <div className="activity-chart-wrapper">
+
                 <Bar
                     data={datosGrafico}
                     options={{
@@ -242,7 +272,9 @@ const ActivityChart = () => {
                         }
                     }}
                 />
+
             </div>
+
         </section>
     );
 };

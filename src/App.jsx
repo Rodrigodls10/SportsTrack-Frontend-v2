@@ -8,7 +8,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ActivitiesPage from "./pages/ActivitiesPage";
-
+import SportsPage from "./pages/SportsPage";
+import SportsEventDetailPage from "./pages/SportsEventDetailPage";
+import CategoriesPage from "./pages/CategoriesPage";
 import ProtectedRoute from "./app/guards/ProtectedRoute";
 
 function App() {
@@ -34,6 +36,22 @@ function App() {
                     path="/activities"
                     element={<ActivitiesPage />}
                 />
+
+                <Route
+                    path="/sports"
+                    element={<SportsPage />}
+                />
+
+                <Route
+                    path="/sports/:id"
+                    element={<SportsEventDetailPage />}
+                />
+
+                <Route
+                    path="/categories"
+                    element={<CategoriesPage />}
+                />
+
             </Route>
 
             <Route
