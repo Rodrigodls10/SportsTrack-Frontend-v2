@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL
+    baseURL: "https://obligatorio-full-stack-cosits.vercel.app/v1"
 });
 
 export default api;
